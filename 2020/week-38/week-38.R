@@ -1,6 +1,7 @@
 # Load required packages
 library(tidytuesdayR)
 library(tidyverse)
+library(ggthemes)
 
 # Load the #TidyTuesday dataset
 ## Read Week 38 Data
@@ -41,7 +42,7 @@ emp <-kids %>%
 
 ## Plot the states
 ggplot(emp, aes(x = year, y = inf_adj_perchild, color = variable)) +
-  geom_line() + facet_wrap(~ state, scales = "free_y") + theme_clean() +
+  geom_line() + facet_wrap(~ state) + theme_clean() +
   theme(axis.text.x = element_text(size = 5))
 
 ## Save the plot
