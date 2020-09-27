@@ -1,0 +1,290 @@
+---
+title: "#TidyTuesday"
+subtitle: "Week 39 - Himalayan Climbing Expeditions"
+author: "TheDataAreClean"
+date: "27th September, 2020"
+output: 
+  html_document: 
+    highlight: pygments
+    theme: readable
+    toc: yes
+    toc_depth: 6
+---
+
+The data this week comes from [The Himalayan Database](https://www.himalayandatabase.com/).
+
+> The Himalayan Database is a compilation of records for all expeditions that have climbed in the Nepal Himalaya. The database is based on the expedition archives of Elizabeth Hawley, a longtime journalist based in Kathmandu, and it is supplemented by information gathered from books, alpine journals and correspondence with Himalayan climbers.  
+> 
+> The data cover all expeditions from 1905 through Spring 2019 to more than 465 significant peaks in Nepal. Also included are expeditions to both sides of border peaks such as Everest, Cho Oyu, Makalu and Kangchenjunga as well as to some smaller border peaks. Data on expeditions to trekking peaks are included for early attempts, first ascents and major accidents.
+
+# Setup
+
+To analyse the data, first step is to setup the working environment.
+
+## R-Markdown
+
+Setting local settings for R-Markdown output characteristics.
+
+```{r setup, echo=FALSE, cache=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Analysis
+
+Loading all the required libraries to complete the analysis.
+
+```{r lib}
+# Load required packages
+library(tidytuesdayR)
+library(tidyverse)
+```
+
+# Data
+
+## Read
+
+Import the data from the `tidytuesdayR` package and store separate files.
+
+```{r data, cache = TRUE}
+# Load the #TidyTuesday dataset
+## Read Week 39 Data
+tuesdata <- tidytuesdayR::tt_load(2020, week = 39)
+
+## Store individual datasets
+## Peaks
+peaks <- tuesdata$peaks
+
+## Members
+members <- tuesdata$members
+
+## Expeditions
+expeditions <- tuesdata$expeditions
+```
+
+## Explore
+
+Preliminary analysis of the datasets.
+
+Looking at the `peaks` data.
+
+```{r peaks-1}
+# Review Peaks Dataset
+## Structure
+glimpse(peaks)
+
+## Peaks Climbed
+peaks %>% 
+  group_by(climbing_status) %>%
+  summarise(count = n())
+
+## Peaks Climbed Bar Chart
+peaks %>%
+  ggplot(aes(climbing_status, fill = climbing_status)) +
+  geom_bar() + theme_minimal() +
+  labs(
+    title = "More than a quarter of Himalayan peaks remain unclimbed",
+    caption = "Source: The Himalayan Database",
+    x = "",
+    y = "Number of peaks"
+  ) +
+  theme(legend.position = "none", )
+```
+
+### Distribution
+
+Next, I wanted to look at distribution of the peak heights.
+
+```{r peaks-2}
+## Peaks and Heights
+peaks %>%
+  ggplot(aes(x = height_metres)) +
+  geom_histogram(binwidth = 200) + theme_minimal() +
+  labs(
+    title = "How tall are Himalayan peaks?",
+    caption = "Source: The Himalayan Database",
+    x = "Height (m)",
+    y = "Number of peaks"
+  )
+```
+
+And how many of those peaks are "Unclimbed".
+
+```{r peaks-3}
+## Peaks, Heights & Status
+peaks %>%
+  ggplot(aes(x = height_metres, fill = climbing_status)) +
+  geom_histogram(binwidth = 200) + theme_minimal() +
+  labs(
+    title = "How many of the tall peaks are climbed?",
+    caption = "Source: The Himalayan Database",
+    x = "Height (m)",
+    y = "Number of peaks",
+    fill = ""
+  )
+```
+
+And identifying Mount Everest ! 
+
+```{r peaks-4}
+## Peaks, Heights, Status and Everest
+peaks %>%
+  ggplot(aes(x = height_metres, fill = climbing_status)) +
+  geom_histogram(binwidth = 200) + theme_minimal() +
+  labs(
+    title = "What about Mount Everest !",
+    caption = "Source: The Himalayan Database",
+    x = "Height (m)",
+    y = "Number of peaks",
+    fill = ""
+  ) + 
+  annotate("text", 8450, 17, label = "Mount Everest") +
+  annotate(
+    "curve",
+    x = 8500,
+    y = 15,
+    xend = 8775,
+    yend = 2,
+    curvature = -0.25,
+    arrow = arrow(length = unit(2, "mm"))
+  )
+```
+
+### Over Time
+
+When were Himalayan peaks first climbed?
+
+```{r time-1}
+## Peaks climbed over years Histogram
+peaks %>%
+  ggplot(aes(first_ascent_year)) +
+  geom_histogram() + theme_minimal()
+```
+
+Identifying the error year and re-visualizing the data.
+
+```{r time-2, message = FALSE, warning = FALSE}
+## Identify Anomaly Peak
+## Look at the chart
+peaks %>%
+  ggplot(aes(first_ascent_year)) +
+  geom_histogram() + theme_minimal() +
+  annotate("text", 300, 50, label = "What peak is this ?") +
+  annotate(
+    "curve",
+    x = 240,
+    y = 42,
+    xend = 190,
+    yend = 5,
+    curvature = 0.25,
+    arrow = arrow(length = unit(2, "mm"))
+  )
+
+## Search Data
+## Min Climb Year
+min(peaks$first_ascent_year, na.rm = TRUE)
+
+## Filter Out and Visualize
+## One Year Buckets
+peaks %>%
+  filter(first_ascent_year != 201) %>%
+  ggplot(aes(first_ascent_year)) +
+  geom_histogram(binwidth = 1) + theme_minimal() +
+  scale_x_continuous(breaks = seq(1910, 2020, 10)) +
+  labs(title = "Climbers are still summitting peaks for the first time",
+       subtitle = "Year of first ascent for Himalayan peaks",
+       caption = "Source: The Himalayan Database",
+       x = "Year of first ascent",
+       y = "Number of first ascents")
+
+## Filter Out and Visualize
+## Five Year Buckets
+peaks %>%
+  filter(first_ascent_year != 201) %>%
+  ggplot(aes(first_ascent_year)) +
+  geom_histogram(binwidth = 5) + theme_minimal() +
+  scale_x_continuous(breaks = seq(1910, 2020, 10)) +
+  labs(title = "Climbers are still summitting peaks for the first time",
+       subtitle = "Year of first ascent for Himalayan peaks",
+       caption = "Source: The Himalayan Database",
+       x = "Year of first ascent (5-year bins)",
+       y = "Number of first ascents")
+
+## Filter Out and Visualize
+## Line Chart + Extra Effort
+peaks %>%
+  filter(first_ascent_year != 201 & !is.na(first_ascent_year)) %>%
+  group_by(first_ascent_year) %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = first_ascent_year, y = count)) +
+  geom_line() + geom_point() + theme_minimal() +
+  scale_x_continuous(breaks = seq(1910, 2020, 10)) +
+  labs(title = "Climbers are still summitting peaks for the first time",
+       subtitle = "Year of first ascent for Himalayan peaks",
+       caption = "Source: The Himalayan Database",
+       x = "Year of first ascent",
+       y = "Number of first ascents")
+```
+
+The line chart option is considered to show trends over time, doesn't seem to work well in this case.
+
+### One Last Thing
+
+When did we climb Everest during all of this?
+
+```{r last-1}
+# Every over time
+peaks %>%
+  filter(first_ascent_year != 201 & !is.na(first_ascent_year)) %>%
+  ggplot(aes(x = first_ascent_year, y = height_metres)) +
+  geom_point() + theme_minimal() +
+  scale_x_continuous(breaks = seq(1910, 2020, 10)) +
+  labs(title = "What is the human mind thinking ?",
+       subtitle = "Year of first ascent for Himalayan peaks",
+       caption = "Source: The Himalayan Database",
+       x = "Year of first ascent",
+       y = "Height (m)")
+```
+
+# 
+
+```{r last-2}
+peaks %>%
+  filter(first_ascent_year != 201 & !is.na(first_ascent_year)) %>%
+  ggplot(aes(x = first_ascent_year, y = height_metres)) +
+  geom_point() + theme_minimal() +
+  scale_x_continuous(breaks = seq(1910, 2020, 10)) +
+  labs(title = "Ofcourse !",
+       subtitle = "We climbed Everest pretty early.",
+       caption = "Source: The Himalayan Database",
+       x = "Year of first ascent",
+       y = "Height (m)") +
+  annotate("text", 1940, 8450, label = "Mount Everest") +
+  annotate(
+    "curve",
+    x = 1940,
+    y = 8550,
+    xend = 1951,
+    yend = 8850,
+    curvature = -0.25,
+    arrow = arrow(length = unit(2, "mm"))
+  )
+```
+
+# Questions
+
+There are still some questions unaswered from the `peaks` dataset.
+
+- Which country climbed most peaks first?
+- Which peaks have multiple names? 
+
+# Next Steps
+
+- Analyse the members and expeditions data
+- Find connections between different datasets
+- Create a final analysis and data story
+
+---
+
+**/TATA!/**
+
+**/cube/**
