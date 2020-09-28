@@ -1,14 +1,17 @@
 ---
-title: "#TidyTuesday"
-subtitle: "Week 39 - Himalayan Climbing Expeditions"
+title: '#TidyTuesday'
 author: "TheDataAreClean"
 date: "27th September, 2020"
-output: 
-  html_document: 
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '6'
+  html_document:
     highlight: pygments
     theme: readable
     toc: yes
     toc_depth: 6
+subtitle: Week 39 - Himalayan Climbing Expeditions
 ---
 
 The data this week comes from [The Himalayan Database](https://www.himalayandatabase.com/).
@@ -87,7 +90,7 @@ peaks %>%
     x = "",
     y = "Number of peaks"
   ) +
-  theme(legend.position = "none", )
+  theme(legend.position = "none")
 ```
 
 ### Distribution
@@ -244,8 +247,6 @@ peaks %>%
        x = "Year of first ascent",
        y = "Height (m)")
 ```
-
-# 
 
 ```{r last-2}
 peaks %>%
